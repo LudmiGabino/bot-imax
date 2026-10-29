@@ -157,10 +157,31 @@ def armar_aviso(film_id: str, p: dict) -> str:
     return f"🎬 ¡{p['titulo']} ya aparece en IMAX en Showcase ({estado})!\n{link}"
 
 
+def diagnostico() -> None:
+    """Muestra qué está recibiendo el bot cuando no encuentra películas."""
+    try:
+        contenido = obtener_html_simple(URL)
+    except Exception as error:
+        print("No pude descargar la página:", error)
+        return
+    titulo = re.search(r"<title>(.*?)</title>", contenido, re.I | re.S)
+    print("--- DIAGNÓSTICO ---")
+    print("Caracteres descargados:", len(contenido))
+    print("Título de la página:", limpiar(titulo.group(1)) if titulo else "(sin título)")
+    print("Apariciones de 'filmid=':", contenido.count("filmid="))
+    print(f"Apariciones de 'house_id={IMAX_HOUSE_ID}':", contenido.count(f"house_id={IMAX_HOUSE_ID}"))
+    print("Primeros 300 caracteres de texto:", limpiar(contenido)[:300])
+
+
 def modo_prueba() -> None:
-    peliculas = consultar_imax()
+    try:
+        peliculas = consultar_imax()
+    except Exception as error:
+        print("Error al consultar la página:", error)
+        peliculas = {}
     if not peliculas:
         print("No encontré ninguna película IMAX. Puede que la página haya cambiado.")
+        diagnostico()
         return
     print(f"Películas IMAX que veo ahora ({len(peliculas)}):")
     for p in peliculas.values():
