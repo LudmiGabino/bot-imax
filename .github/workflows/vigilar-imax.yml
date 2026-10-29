@@ -1,0 +1,44 @@
+name: Vigilar IMAX
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # cada 15 minutos
+  workflow_dispatch:          # permite ejecutarlo a mano desde la pestaña Actions
+
+permissions:
+  actions: write   # necesario para que el workflow se desactive solo al avisar
+  contents: read
+
+jobs:
+  chequear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Mostrar qué ve el bot (solo en ejecución manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: python bot_showcase_imax.py --prueba
+
+      - name: Chequear cartelera IMAX
+        id: chequeo
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          set +e
+          python bot_showcase_imax.py --una-vez
+          codigo=$?
+          echo "codigo=$codigo" >> "$GITHUB_OUTPUT"
+          # 0 = normal, 10 = avisó (se desactiva abajo); 1 o 2 = algo falló -> marcar en rojo
+          if [ "$codigo" -ne 0 ] && [ "$codigo" -ne 10 ]; then exit 1; fi
+          exit 0
+
+      - name: Desactivar el workflow (ya se avisó)
+        if: steps.chequeo.outputs.codigo == '10'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow disable "Vigilar IMAX" --repo "$GITHUB_REPOSITORY"
