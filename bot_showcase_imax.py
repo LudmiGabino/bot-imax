@@ -40,7 +40,7 @@ import urllib.parse
 import urllib.request
 
 # ---------------------------------------------------------------- CONFIG ----
-TITULOS = ["Dune", "Duna"]  # nombres con los que puede aparecer la película
+TITULOS = ["La Odisea"]  # nombres con los que puede aparecer la película
 URL = "https://www.todoshowcase.com/"  # sin parámetros de tracking (gclid, etc.)
 IMAX_HOUSE_ID = "3250"  # id de la sala IMAX Theatre en los links de Showcase
 MINUTOS_ENTRE_CHEQUEOS = 15
